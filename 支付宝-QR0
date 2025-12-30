@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付宝转账二维码生成器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+        body { background: linear-gradient(135deg, #1677ff 0%, #36c 100%); color: #333; min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        .container { background-color: white; border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15); width: 100%; max-width: 900px; overflow: hidden; display: flex; flex-direction: column; }
+        header { background: linear-gradient(135deg, #1677ff 0%, #36c 100%); color: white; padding: 25px 30px; text-align: center; }
+        header h1 { font-size: 28px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        header p { opacity: 0.9; font-size: 15px; }
+        .content { display: flex; flex-wrap: wrap; padding: 0; }
+        .form-section, .preview-section { flex: 1; min-width: 300px; padding: 30px; }
+        .form-section { border-right: 1px solid #eee; }
+        .section-title { font-size: 20px; margin-bottom: 20px; color: #1677ff; display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px solid #f0f7ff; }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; }
+        input, textarea { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; transition: all 0.3s; }
+        input:focus, textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.1); outline: none; }
+        .qr-container { width: 250px; height: 250px; border: 1px solid #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; background-color: #f9f9f9; overflow: hidden; }
+        #qrcode { padding: 15px; background: white; border-radius: 5px; }
+        .instruction-box { background-color: #f0f7ff; border-radius: 10px; padding: 20px; margin-top: 20px; border-left: 4px solid #1677ff; font-size: 14px; line-height: 1.6; }
+        .buttons { display: flex; gap: 15px; margin-top: 30px; }
+        .btn { padding: 14px 28px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; }
+        .btn-primary { background: linear-gradient(135deg, #1677ff 0%, #36c 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 7px 15px rgba(22, 119, 255, 0.3); }
+        .btn-secondary { background-color: #f0f7ff; color: #1677ff; border: 1px solid #cce0ff; }
+        .preview-text { background-color: #f9f9f9; border-radius: 10px; padding: 20px; margin-top: 20px; text-align: left; font-size: 15px; line-height: 1.6; white-space: pre-line; max-height: 200px; overflow-y: auto; }
+        .info-box { background-color: #fff8e1; border-radius: 10px; padding: 20px; margin-top: 30px; border-left: 4px solid #ffc107; }
+        footer { text-align: center; padding: 20px; background-color: #f9f9f9; color: #666; font-size: 14px; border-top: 1px solid #eee; }
+        @media (max-width: 768px) { .content { flex-direction: column; } .form-section { border-right: none; border-bottom: 1px solid #eee; } .buttons { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-qrcode"></i> 支付宝转账二维码生成器</h1>
+            <p>创建个性化的支付宝转账指引二维码，方便他人向您转账</p >
+        </header>
+        <div class="content">
+            <div class="form-section">
+                <div class="section-title"><i class="fas fa-edit"></i> 填写收款信息</div>
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> 收款人姓名</label>
+                    <input type="text" id="name" placeholder="请输入收款人姓名" value="张三">
+                </div>
+                <div class="form-group">
+                    <label for="account"><i class="fas fa-credit-card"></i> 支付宝账号/手机号</label>
+                    <input type="text" id="account" placeholder="请输入支付宝账号或手机号" value="13800138000">
+                </div>
+                <div class="form-group">
+                    <label for="amount"><i class="fas fa-yen-sign"></i> 金额（选填）</label>
+                    <input type="text" id="amount" placeholder="请输入转账金额，如：100.00">
+                </div>
+                <div class="form-group">
+                    <label for="note"><i class="fas fa-sticky-note"></i> 备注（选填）</label>
+                    <textarea id="note" placeholder="请输入转账备注" rows="3"></textarea>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" id="generateBtn"><i class="fas fa-qrcode"></i> 生成二维码</button>
+                    <button class="btn btn-secondary" id="downloadBtn"><i class="fas fa-download"></i> 下载二维码</button>
+                </div>
+                <div class="instruction-box">
+                    <h4><i class="fas fa-lightbulb"></i> 使用说明</h4>
+                    <p>1. 填写您的收款信息（姓名和支付宝账号）</p >
+                    <p>2. 点击"生成二维码"按钮创建二维码</p >
+                    <p>3. 下载二维码并分享给需要向您转账的人</p >
+                    <p>4. 对方扫描二维码后，按照指引打开支付宝完成转账</p >
+                </div>
+            </div>
+            <div class="preview-section">
+                <div class="section-title"><i class="fas fa-eye"></i> 预览与下载</div>
+                <div class="preview-content">
+                    <div class="qr-container"><div id="qrcode"></div></div>
+                    <div class="preview-title">二维码扫描后将显示以下信息：</div>
+                    <div class="preview-text" id="previewText">支付宝转账指引：
+
+收款人：张三
+账号：13800138000
+
+操作步骤：
+1. 打开支付宝APP
+2. 点击【转账】
+3. 输入以上信息
+4. 确认转账
+
+感谢使用！</div>
+                    <div class="info-box">
+                        <h4><i class="fas fa-exclamation-triangle"></i> 重要提示</h4>
+                        <p>出于安全考虑，支付宝官方限制了直接预填收款信息的转账二维码。此二维码仅提供文字指引，用户需要手动打开支付宝输入信息完成转账。</p >
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <p>© 2023 支付宝转账二维码生成器 | 本工具仅用于生成转账指引，请遵守支付宝使用规则</p >
+            <p style="margin-top: 5px; font-size: 12px;">提示：请确保您分享的二维码信息准确无误</p >
+        </footer>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const nameInput = document.getElementById('name');
+            const accountInput = document.getElementById('account');
+            const amountInput = document.getElementById('amount');
+            const noteInput = document.getElementById('note');
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const previewText = document.getElementById('previewText');
+            const qrcodeDiv = document.getElementById('qrcode');
+            let currentQRCode = null;
+            function generateQRText() {
+                let text = "支付宝转账指引：\n\n";
+                text += `收款人：${nameInput.value || '未填写'}\n`;
+                text += `账号：${accountInput.value || '未填写'}\n`;
+                if (amountInput.value) { text += `金额：${amountInput.value}元\n`; }
+                if (noteInput.value) { text += `备注：${noteInput.value}\n`; }
+                text += "\n操作步骤：\n1. 打开支付宝APP\n2. 点击【转账】\n3. 输入以上信息\n4. 确认转账\n\n感谢使用！";
+                return text;
+            }
+            function updatePreview() { previewText.textContent = generateQRText(); }
+            updatePreview();
+            nameInput.addEventListener('input', updatePreview);
+            accountInput.addEventListener('input', updatePreview);
+            amountInput.addEventListener('input', updatePreview);
+            noteInput.addEventListener('input', updatePreview);
+            generateBtn.addEventListener('click', function() {
+                const qrText = generateQRText();
+                qrcodeDiv.innerHTML = '';
+                currentQRCode = new QRCode(qrcodeDiv, { text: qrText, width: 200, height: 200, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+                const originalText = generateBtn.innerHTML;
+                generateBtn.innerHTML = '<i class="fas fa-check"></i> 二维码已生成';
+                generateBtn.style.background = 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)';
+                setTimeout(() => { generateBtn.innerHTML = originalText; generateBtn.style.background = ''; }, 2000);
+            });
+            downloadBtn.addEventListener('click', function() {
+                const canvas = qrcodeDiv.querySelector('canvas');
+                if (!canvas) { alert('请先生成二维码！'); return; }
+                const link = document.createElement('a');
+                link.download = `支付宝转账-${nameInput.value || '未命名'}.png`;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                const originalText = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-check"></i> 下载完成';
+                downloadBtn.style.background = 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)';
+                setTimeout(() => { downloadBtn.innerHTML = originalText; downloadBtn.style.background = ''; }, 2000);
+            });
+            setTimeout(() => { generateBtn.click(); }, 500);
+        });
+    </script>
+</body>
+</html>
